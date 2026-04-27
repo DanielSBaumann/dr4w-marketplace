@@ -1,0 +1,15 @@
+package io.dr4w.marketplace.wallet.domain.port.out;
+
+import io.dr4w.marketplace.wallet.domain.model.Wallet;
+
+import java.util.Optional;
+import java.util.UUID;
+
+public interface WalletRepository {
+
+    Wallet save(Wallet wallet);
+
+    Optional<Wallet> findByUserId(UUID userId);
+
+    Wallet findOrCreateByUserId(UUID userId);
+}

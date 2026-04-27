@@ -1,0 +1,11 @@
+package io.dr4w.marketplace.wallet.adapter.out.persistence;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+interface WalletJpaRepository extends JpaRepository<WalletEntity, UUID> {
+
+    Optional<WalletEntity> findByUserId(UUID userId);
+}
