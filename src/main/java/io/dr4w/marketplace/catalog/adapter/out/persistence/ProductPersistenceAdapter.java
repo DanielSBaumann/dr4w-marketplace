@@ -29,7 +29,19 @@ public class ProductPersistenceAdapter implements ProductRepository {
 
     @Override
     public Page<Product> findActiveByFilters(String term, Category category, Pageable pageable) {
-        return jpa.findActiveByFilters(term, category, pageable).map(ProductEntity::toDomain);
+        boolean hasTerm = term != null && !term.isBlank();
+        boolean hasCategory = category != null;
+        Page<ProductEntity> page;
+        if (hasTerm && hasCategory) {
+            page = jpa.findActiveByCategoryAndTerm(category, term, pageable);
+        } else if (hasCategory) {
+            page = jpa.findActiveByCategory(category, pageable);
+        } else if (hasTerm) {
+            page = jpa.findActiveByTerm(term, pageable);
+        } else {
+            page = jpa.findAllActive(pageable);
+        }
+        return page.map(ProductEntity::toDomain);
     }
 
     @Override

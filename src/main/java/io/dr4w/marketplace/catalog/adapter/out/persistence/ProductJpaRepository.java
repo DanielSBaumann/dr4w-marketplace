@@ -11,17 +11,17 @@ import java.util.UUID;
 
 interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID> {
 
-    @Query("""
-            SELECT p FROM ProductEntity p
-            WHERE p.active = true
-              AND (:category IS NULL OR p.category = :category)
-              AND (:term IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%'))
-                                 OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :term, '%')))
-            """)
-    Page<ProductEntity> findActiveByFilters(
-            @Param("term") String term,
-            @Param("category") Category category,
-            Pageable pageable);
+    @Query("SELECT p FROM ProductEntity p WHERE p.active = true")
+    Page<ProductEntity> findAllActive(Pageable pageable);
+
+    @Query("SELECT p FROM ProductEntity p WHERE p.active = true AND p.category = :category")
+    Page<ProductEntity> findActiveByCategory(@Param("category") Category category, Pageable pageable);
+
+    @Query("SELECT p FROM ProductEntity p WHERE p.active = true AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%')) OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :term, '%')))")
+    Page<ProductEntity> findActiveByTerm(@Param("term") String term, Pageable pageable);
+
+    @Query("SELECT p FROM ProductEntity p WHERE p.active = true AND p.category = :category AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :term, '%')) OR LOWER(p.brand) LIKE LOWER(CONCAT('%', :term, '%')))")
+    Page<ProductEntity> findActiveByCategoryAndTerm(@Param("category") Category category, @Param("term") String term, Pageable pageable);
 
     Page<ProductEntity> findByVendorId(UUID vendorId, Pageable pageable);
 }
