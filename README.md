@@ -13,7 +13,7 @@ Modern marketplace API built with **Java 21**, **Spring Boot 3.3**, and **Hexago
 | Migrations | Flyway |
 | Docs | SpringDoc OpenAPI 3 |
 | Tests | JUnit 5 + Testcontainers |
-| Build | Maven 3.9 |
+| Build | Maven 3.9+ |
 
 ## Bounded contexts
 
@@ -29,31 +29,80 @@ Modern marketplace API built with **Java 21**, **Spring Boot 3.3**, and **Hexago
 ### Prerequisites
 
 - Java 21+
+- Maven 3.9+ (`mvn -version` to check)
 - Docker (for PostgreSQL)
 
-### Start the database
+> **Note:** this project has no Maven wrapper (`mvnw`). Use the system `mvn` command directly.
+
+---
+
+### 1. Start the database
 
 ```bash
+cd /path/to/dr4w-marketplace
 docker compose up -d postgres
 ```
 
-### Run the application
+Wait a few seconds for Postgres to be ready before starting the app.
+
+---
+
+### 2. Build the application
+
+**You must build before the first run, and again after any code change:**
 
 ```bash
-./mvnw spring-boot:run
+mvn clean package -DskipTests
 ```
 
-### API documentation
+`-DskipTests` keeps it fast (~15–20 s). Run without it to include integration tests (requires Docker running).
 
-Once running, visit: `http://localhost:8080/swagger-ui.html`
+The output jar is placed at `target/marketplace-1.0.0-SNAPSHOT.jar`.
+
+---
+
+### 3. Start the application
+
+```bash
+java -jar target/marketplace-1.0.0-SNAPSHOT.jar
+```
+
+The app starts on `http://localhost:8080`. On first boot it runs Flyway migrations and seeds demo data automatically:
+
+| Account | Email | Password | Role |
+|---------|-------|----------|------|
+| Vendor | `store@dr4w.io` | `Store@12345!` | VENDOR |
+| Buyer | `buyer@dr4w.io` | `Buyer@12345!` | BUYER |
+
+---
+
+### When do I need to rebuild?
+
+| Situation | Action needed |
+|-----------|--------------|
+| First time cloning the repo | `mvn clean package -DskipTests` then `java -jar ...` |
+| After changing any Java source file | `mvn clean package -DskipTests` then restart |
+| After changing only `application.yml` | Restart only (`java -jar ...`) |
+| After changing a Flyway migration | `mvn clean package -DskipTests` then restart |
+| Pulling new commits from remote | `mvn clean package -DskipTests` then restart |
+
+---
+
+### API documentation (Swagger UI)
+
+Once running: `http://localhost:8080/swagger-ui.html`
+
+---
 
 ### Run tests
 
 ```bash
-./mvnw test
+mvn test
 ```
 
-> Integration tests use Testcontainers — Docker must be running.
+Integration tests use Testcontainers — Docker must be running.
+
+---
 
 ## Environment variables
 
@@ -68,6 +117,14 @@ Once running, visit: `http://localhost:8080/swagger-ui.html`
 | `JWT_EXPIRATION_MS` | `900000` | Access token TTL (15 min) |
 | `PLATFORM_FEE_PERCENTAGE` | `5` | Platform fee % deducted from vendor earnings |
 | `SERVER_PORT` | `8080` | HTTP server port |
+
+Override any variable on the command line:
+
+```bash
+java -DJWT_SECRET=my-secret -jar target/marketplace-1.0.0-SNAPSHOT.jar
+```
+
+---
 
 ## API overview
 
@@ -90,10 +147,12 @@ GET    /api/v1/orders/{id}         Get order
 GET    /api/v1/wallet              Get wallet balance + transactions
 ```
 
+---
+
 ## Docker build
 
 ```bash
-./mvnw clean package -DskipTests
+mvn clean package -DskipTests
 docker build -t dr4w-marketplace .
 docker run -p 8080:8080 \
   -e DB_HOST=host.docker.internal \
